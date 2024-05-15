@@ -1,0 +1,11 @@
+{
+  "name": "gerador-de-api-server",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "flask --app src/main run"
+  },
+  "keywords": [],
+  "author": "Aaron e Mateus",
+  "license": "ISC"
+}
