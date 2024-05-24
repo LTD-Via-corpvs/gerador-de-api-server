@@ -1,50 +1,59 @@
 import subprocess
-from os import chdir, getcwd
+import json
+from os import chdir, getcwd, path, makedirs
 
 class PackageManager:
-    def __init__(self) -> None:
+    def __init__(self, script_folder) -> None:
         self.package_managers = ("yarn", "npm", "bun", "pnpm")
         self.available_package_managers = []
-        self.project_path = None
+        self.script_folder = script_folder
+        self.build_path = path.join(script_folder, '..', '..', 'build')
+        print(script_folder)
         self.__check()
 
     def reload(self) -> list[str]:
         self.__check()
         return self.available_package_managers
     
-    def set_project_path(self, project_path) -> None:
-        self.project_path = project_path
-    
-    def init(self, package_manager: str = "npm") -> bool: # DONT TESTED
+    def init(self, project_name: str, package_manager: str = "npm") -> bool:
         result = False
-        try:
-            self.__check_info(package_manager)
-            chdir(self.project_path)
-            subprocess.run([package_manager, 'init', '--y'], capture_output=True, text=True)
-            result = True
-        except:
-            pass
-        finally:
-            chdir(getcwd())
+        self.project_path = path.join(self.build_path, project_name)
+        if path.exists(self.project_path):
+            raise Exception("There is already a project with that name.")
+        self.__check_info(package_manager)
+        chdir(self.project_path)
+        command = [package_manager]
+        match package_manager:
+            case "pnpm":
+                command.extend(["init"])
+            case _:
+                command.extend(["init", "--y"])
+        subprocess.run([*command], capture_output=True, text=True)
+        self.__update_pkg()
+        result = True
+        chdir(self.script_folder)
         return result
     
-    def install(self, package_manager: str = "npm") -> bool: # DONT TESTED
+    def install(self, dep: str, package_manager: str = "npm") -> bool:
         result = False
         try:
             self.__check_info(package_manager)
             chdir(self.project_path)
             command = [package_manager]
             match package_manager:
-                case "pnpm", "yarn", "bun":
-                    command.extend(["add", "express"])
+                case "pnpm":
+                    command.extend(["add", dep])
+                case "yarn":
+                    command.extend(["add", dep])
+                case "bun":
+                    command.extend(["add", dep])
                 case _:
-                    command.extend(["install", "express"])
+                    command.extend(["install", dep])
             subprocess.run(command, capture_output=True, text=True)
             result = True
+            chdir(self.script_folder)
         except:
             pass
-        finally:
-            chdir(getcwd())
         return result
 
     def __check(self) -> None:
@@ -63,8 +72,19 @@ class PackageManager:
             except Exception as e:
                 print(f"Unexpected error checking {package_manager}: {e}")
 
-    def __check_info(self, package_manager: str = "npm") -> None: # DONT TESTED
+    def __check_info(self, package_manager: str = "npm") -> None:
         if self.project_path is None:
             return Exception("PROJECT_PATH not defined.")
+        if not path.exists(self.project_path):
+            makedirs(self.project_path)
         if package_manager not in self.available_package_managers:
             return Exception("Package manager not available.")
+    
+    def __update_pkg(self):
+        pkg_path = path.join(self.project_path, "package.json")
+        with open(pkg_path, 'r+') as f:
+            json_data = json.load(f)
+            json_data["type"] = "module"
+            f.seek(0)
+            json.dump(json_data, f, indent=4)
+            f.truncate()
