@@ -34,27 +34,26 @@ class PackageManager:
         chdir(self.script_folder)
         return result
     
-    def install(self, dep: str, package_manager: str = "npm") -> bool:
-        result = False
-        try:
-            self.__check_info(package_manager)
-            chdir(self.project_path)
-            command = [package_manager]
-            match package_manager:
-                case "pnpm":
-                    command.extend(["add", dep])
-                case "yarn":
-                    command.extend(["add", dep])
-                case "bun":
-                    command.extend(["add", dep])
-                case _:
-                    command.extend(["install", dep])
-            subprocess.run(command, capture_output=True, text=True)
-            result = True
-            chdir(self.script_folder)
-        except:
-            pass
-        return result
+    def install(self, dep: list[str], package_manager: str = "npm", dev: bool = False):
+        self.__check_info(package_manager)
+        chdir(self.project_path)
+        command = [package_manager]
+        match package_manager:
+            case "pnpm":
+                command.extend(["add", *dep])
+            case "yarn":
+                command.extend(["add", *dep])
+            case "bun":
+                command.extend(["add", *dep])
+            case _:
+                command.extend(["install", *dep])
+        if dev:
+            if package_manager == "npm" or package_manager == "pnpm":
+                command.append("--save-dev")
+            else:
+                command.append("--dev")
+        subprocess.run(command, capture_output=True, text=True)
+        chdir(self.script_folder)
 
     def __check(self) -> None:
         if len(self.available_package_managers) > 0:
@@ -85,6 +84,9 @@ class PackageManager:
         with open(pkg_path, 'r+') as f:
             json_data = json.load(f)
             json_data["type"] = "module"
+            json_data["scripts"] = {
+                'dev': "nodemon src/index.js localhost 3000"
+            }
             f.seek(0)
             json.dump(json_data, f, indent=4)
             f.truncate()
