@@ -4,7 +4,6 @@ from shutil import copy2, copytree
 
 class TemplateManager:
     def __init__(self, script_folder) -> None:
-        print(script_folder)
         self.build_path = path.join(script_folder, '..', '..', 'build')
 
     def update_project_path(self, project_name):

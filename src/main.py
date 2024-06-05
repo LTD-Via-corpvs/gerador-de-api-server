@@ -1,12 +1,12 @@
 from flask import Flask, request
 from flask_cors import CORS
-from manager import PackageManager, TemplateManager
+from manager import PackageManager, TemplateManager, ProjectManager
 from os import getcwd
 
 script_folder = getcwd()
 package_manager = PackageManager(script_folder)
 template_manager = TemplateManager(script_folder)
-
+project_manager = ProjectManager(script_folder)
 
 app = Flask(__name__)
 CORS(app)
@@ -25,7 +25,46 @@ def get_packages():
         return package_manager.reload(), 201
     return package_manager.available_package_managers, 200
 
-@app.post("/init")
+@app.post("/api/generate")
+def gen_handle():
+    data = request.get_json()
+    params = request.args
+    if not data:
+        return {"error": "No JSON data provided"}, 400
+    if not params:
+        return {"error": "No PARAMS data provided"}, 400
+    
+    if not 'project' in params:
+        return { "error": "Specify the name of project" }, 400
+    
+    if not 'model' in data:
+        return { "error": "Specify a name for model" }, 400
+    if not 'file' in data:
+        return { "error": "Specify a name for file" }, 400
+    if not 'route' in data:
+        return { "error": "Specify a name for route" }, 400
+    
+    project_name = params.get('project')
+    modelName = data.get('model')
+    fileName = data.get('file')
+    junctionTable = data.get('junctionTable')
+    routeName = data.get('route')
+
+    try:
+        project_manager.update_project_path(project_name)
+        project_manager.insertImportIntoIndex(modelName)
+        project_manager.generateModel(modelName, fileName, junctionTable)
+        project_manager.generateController(modelName, fileName)
+        project_manager.generateRoute(modelName, fileName)
+        project_manager.insertRouteIntoIndex(modelName, routeName)
+    except Exception as err:
+        return { 'error': err.args[0] }, 500
+
+    return {
+        "message": "Model generated sucessfully!",
+    }, 201
+
+@app.post("/api/init")
 def init_project():
     if not 'package_manager' in request.json:
         return 'É necessário específica o gerenciador de pacotes.', 400
