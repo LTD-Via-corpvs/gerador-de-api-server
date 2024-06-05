@@ -36,14 +36,12 @@ def init_project():
 
     try:
         package_manager.init(project_name, _package_manager)
-            
-        package_manager.install(["express", "cors", "uuid", "cookie-parser", "bcrypt", "date-fns", "jsonwebtoken"], _package_manager)
+        package_manager.install(["express", "cors", "uuid", "cookie-parser", "bcrypt", "date-fns", "jsonwebtoken", "@prisma/client"], _package_manager)
         package_manager.install(["prisma", "nodemon"], _package_manager, True)
-
+        package_manager.exec(["prisma", "init"])
         template_manager.update_project_path(project_name)
         template_manager.create_src()
         template_manager.create_index()
-        template_manager.create_env()
     except Exception as err:
         return { 'error': err.args[0] }, 500
 

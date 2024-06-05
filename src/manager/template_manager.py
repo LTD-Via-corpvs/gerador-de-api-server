@@ -51,10 +51,6 @@ app.listen(PORT, () => {
         if not self.__create_file("src"):
             raise Exception("src already exists")
 
-    def create_env(self):
-        if not self.__create_file(".env.example"):
-            raise Exception(".env.example already exists")
-
     def __create_file(self, file_name, content = None) -> bool:
         path_file = path.join(self.project_path, file_name)
         if path.exists(path_file):

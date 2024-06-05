@@ -55,6 +55,22 @@ class PackageManager:
         subprocess.run(command, capture_output=True, text=True)
         chdir(self.script_folder)
 
+    def exec(self, command_list: list[str], package_manager: str = "npm"):
+        self.__check_info(package_manager)
+        chdir(self.project_path)
+        command = [package_manager]
+        match package_manager:
+            case "pnpm":
+                command.extend(["exec", *command_list])
+            case "yarn":
+                command.extend(["exec", *command_list])
+            case "bun":
+                command.extend(["exec", *command_list])
+            case _:
+                command.extend(["exec", *command_list])
+        subprocess.run(command, capture_output=True, text=True)
+        chdir(self.script_folder)
+
     def __check(self) -> None:
         if len(self.available_package_managers) > 0:
             self.available_package_managers.clear()
@@ -85,7 +101,7 @@ class PackageManager:
             json_data = json.load(f)
             json_data["type"] = "module"
             json_data["scripts"] = {
-                'dev': "nodemon src/index.js localhost 3000"
+                'dev': "nodemon src/index.js"
             }
             f.seek(0)
             json.dump(json_data, f, indent=4)
