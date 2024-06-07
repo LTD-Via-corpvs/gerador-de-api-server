@@ -74,7 +74,7 @@ def init_project():
     except Exception as err:
         return { 'error': err.args[0] }, 500
 
-    return { 'package_manager': _package_manager, 'project_name': project_name }, 200
+    return { 'package_manager': _package_manager, 'project_name': project_name }, 201
 
 """
 GET ROUTE
@@ -150,7 +150,7 @@ def update_model():
     
     return {
         "message": "Model updated sucessfully!"
-    }, 201
+    }, 200
 
 @app.route('/api/routes', methods=['PUT'])
 def update_route():
