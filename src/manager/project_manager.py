@@ -8,6 +8,8 @@ class ProjectManager:
 
     def update_project_path(self, project_name):
         self.project_path = path.join(self.build_path, project_name)
+        if not path.exists(self.project_path):
+            raise NotADirectoryError(f"O projeto {project_name} não existe.")
 
     def generateModel(self, modelName: str, fileName: str, junctionTable: str):
         modelCode = (
@@ -131,3 +133,65 @@ class ProjectManager:
 
         with open(indexPath, 'w') as arquivo:
             arquivo.writelines(linhas)
+
+    def getModels(self):
+        dir_path = path.join(self.project_path, "src", "models")
+        files = [f for f in listdir(dir_path) if path.isfile(path.join(dir_path, f)) and f not in ["index.js", "_base.js"]]
+        arr = []
+        for f in files:
+            split = f.split('_')[1].split('.')[0]
+            split = split[0].capitalize() + split[1:]
+            arr.append(split)
+
+        return files, arr
+
+    def updateModelName(self, fileName: str, modelName: str):
+        if not fileName.startswith("_"):
+            raise Exception(f"O {fileName} precisa começar começar com underline!")
+        filePath = path.join(self.project_path, "src", "models", f"{fileName}.js")
+        
+        with open(filePath, 'r') as arquivo:
+            linhas = arquivo.readlines()
+
+        linha_desejada = linhas[5] 
+        partes = linha_desejada.split("'")
+        partes[1] = modelName
+        nova_linha = "'".join(partes)
+
+        linhas[5] = nova_linha
+
+        with open(filePath, 'w') as arquivo:
+            arquivo.writelines(linhas)
+
+    def updateRouteName(self, routeName, oldRoute):
+        filePath = path.join(self.project_path, "src", "index.js")
+        
+        with open(filePath, 'r', encoding='UTF-8') as arquivo:
+            linhas = arquivo.readlines()
+
+        line = self.getSpecificLine(oldRoute)
+    
+        if line == -1:
+            return Exception(f"A rota {oldRoute} não foi encontrada no arquivo!")
+        
+        if line < 0 or line >= len(linhas):
+            raise IndexError(f"A linha {line} está fora do intervalo válido (0 a {len(linhas) - 1}).")
+
+        linha_desejada = linhas[line] 
+        partes = linha_desejada.split("'")
+        
+        partes[1] = routeName
+        nova_linha = "'".join(partes)
+
+        linhas[line] = nova_linha
+
+        with open(filePath, 'w', encoding='UTF-8') as arquivo:
+            arquivo.writelines(linhas)
+
+    def getSpecificLine(self, string) -> int:
+        with open(path.join(self.project_path, "src", "index.js"), 'r', encoding='UTF-8') as file:
+            lines = file.readlines()
+            for i, line in enumerate(lines):
+                if string in line:
+                    return i
+        return -1
