@@ -63,16 +63,16 @@ def init_project():
     _package_manager = request.json["package_manager"]
     project_name = request.json["project_name"]
 
-    # try:
-    package_manager.init(project_name, _package_manager)
-    package_manager.install(["express", "cors", "uuid", "cookie-parser", "bcrypt", "date-fns", "jsonwebtoken", "@prisma/client"], _package_manager)
-    package_manager.install(["prisma", "nodemon"], _package_manager, True)
-    package_manager.exec(["prisma", "init"])
-    template_manager.update_project_path(project_name)
-    template_manager.create_src()
-    template_manager.create_index()
-    # except Exception as err:
-    #     return { 'error': err.args[0] }, 500
+    try:
+        package_manager.init(project_name, _package_manager)
+        package_manager.install(["express", "cors", "uuid", "cookie-parser", "bcrypt", "date-fns", "jsonwebtoken", "@prisma/client"], _package_manager)
+        package_manager.install(["prisma", "nodemon"], _package_manager, True)
+        package_manager.exec(["prisma", "init"])
+        template_manager.update_project_path(project_name)
+        template_manager.create_src()
+        template_manager.create_index()
+    except Exception as err:
+        return { 'error': err.args[0] }, 500
 
     return { 'package_manager': _package_manager, 'project_name': project_name }, 201
 
