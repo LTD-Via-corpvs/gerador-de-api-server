@@ -136,7 +136,7 @@ class ProjectManager:
         with open(indexPath, 'w') as arquivo:
             arquivo.writelines(linhas)
 
-    def getModels(self):
+    def getModels(self) -> tuple[list[str], list[str]]:
         dir_path = path.join(self.project_path, "src", "models")
         files = [f for f in listdir(dir_path) if path.isfile(path.join(dir_path, f)) and f not in ["index.js", "_base.js"]]
         arr = []
@@ -165,6 +165,12 @@ class ProjectManager:
         with open(filePath, 'w') as arquivo:
             arquivo.writelines(linhas)
 
+    def getModelName(self, fileName):
+        filePath = path.join(self.project_path, "src", "models", fileName)
+        with open(filePath, 'r') as arquivo:
+            linhas = arquivo.readlines()
+            return linhas[5].split("'")[1]
+
     def updateRouteName(self, routeName, oldRoute):
         filePath = path.join(self.project_path, "src", "index.js")
         
@@ -190,10 +196,23 @@ class ProjectManager:
         with open(filePath, 'w', encoding='UTF-8') as arquivo:
             arquivo.writelines(linhas)
 
-    def getSpecificLine(self, string) -> int:
+    def getSpecificLine(self, string):
+        # raise Exception(string)
         with open(path.join(self.project_path, "src", "index.js"), 'r', encoding='UTF-8') as file:
             lines = file.readlines()
             for i, line in enumerate(lines):
+                # if i == 0:
+                #     continue
                 if string in line:
-                    return i
-        return -1
+                    return i, line.strip()
+        return -1, None
+    
+    # def getAllRoutes(self, routeName):
+    #     filePath = path.join(self.project_path, "src", "index.js")
+    #     with open(filePath, 'r', encoding='UTF-8') as file:
+    #         lines = file.readlines()
+    #         line_content = []
+    #         for i, line in enumerate(lines):
+    #             if routeName in line:
+    #                 line_content.append(line.strip())
+    #     return line_content[1]

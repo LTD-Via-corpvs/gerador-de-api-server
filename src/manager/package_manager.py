@@ -26,6 +26,8 @@ class PackageManager:
         match package_manager:
             case "pnpm":
                 command.extend(["init"])
+            case "yarn":
+                command.extend(["init", "-y"])
             case _:
                 command.extend(["init", "--y"])
         subprocess.run([*command], capture_output=True, text=True)

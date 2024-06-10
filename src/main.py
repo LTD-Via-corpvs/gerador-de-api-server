@@ -63,16 +63,16 @@ def init_project():
     _package_manager = request.json["package_manager"]
     project_name = request.json["project_name"]
 
-    try:
-        package_manager.init(project_name, _package_manager)
-        package_manager.install(["express", "cors", "uuid", "cookie-parser", "bcrypt", "date-fns", "jsonwebtoken", "@prisma/client"], _package_manager)
-        package_manager.install(["prisma", "nodemon"], _package_manager, True)
-        package_manager.exec(["prisma", "init"])
-        template_manager.update_project_path(project_name)
-        template_manager.create_src()
-        template_manager.create_index()
-    except Exception as err:
-        return { 'error': err.args[0] }, 500
+    # try:
+    package_manager.init(project_name, _package_manager)
+    package_manager.install(["express", "cors", "uuid", "cookie-parser", "bcrypt", "date-fns", "jsonwebtoken", "@prisma/client"], _package_manager)
+    package_manager.install(["prisma", "nodemon"], _package_manager, True)
+    package_manager.exec(["prisma", "init"])
+    template_manager.update_project_path(project_name)
+    template_manager.create_src()
+    template_manager.create_index()
+    # except Exception as err:
+    #     return { 'error': err.args[0] }, 500
 
     return { 'package_manager': _package_manager, 'project_name': project_name }, 201
 
@@ -109,16 +109,26 @@ def get_models():
     
     project_name = params.get('project')
 
-    modelFiles, models = None, None
+    data = []
     try:
         project_manager.update_project_path(project_name)
         modelFiles, models = project_manager.getModels()
+        model_routes = [project_manager.getSpecificLine(f"/{project_manager.getModelName(model).lower()}")[1] for model in modelFiles]
+        len_models = len(models)
+        if len_models != len(modelFiles) or len_models != len(model_routes):
+            raise Exception("Há algum problema na sincronia entre os arquivos.")
+        for i in range(len_models):
+            data.append({
+                "name": models[i], "file": modelFiles[i], "route": model_routes[i].split("'")[1]
+            })
     except Exception as err:
         return { 'error': err.args[0] }, 500
     
     return {
-        "models": models,
-        "files": modelFiles
+        "data": {
+            "models": data
+        },
+        "message": "Models listed sucessfully!"
     }, 200
 
 """

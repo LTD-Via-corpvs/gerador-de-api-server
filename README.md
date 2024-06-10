@@ -64,8 +64,14 @@ GET `{localhost}/api/all?project=nome_do_projeto`</br>
 RETORNO (200) `(application/json)`:
 ```json
 {
-  "files": string[],
-  "models": string[]
+  "data": {
+    "models": {
+      "name": string,
+      "file": string,
+      "route": string
+    }[]
+  },
+  "message": string
 }
 ```
 
