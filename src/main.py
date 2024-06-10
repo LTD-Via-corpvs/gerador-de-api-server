@@ -94,6 +94,10 @@ def get_packages():
         return package_manager.reload(), 201
     return package_manager.available_package_managers, 200
 
+@app.get("/projects")
+def get_projects():
+    return project_manager.get_projects(), 200
+
 @app.get('/api/all')
 def get_models():
     params = request.args

@@ -1,10 +1,12 @@
-from os import path, listdir, mkdir
-from shutil import copy2, copytree
+from os import path, listdir, walk
 import re
 
 class ProjectManager:
     def __init__(self, script_folder) -> None:
         self.build_path = path.join(script_folder, '..', '..', 'build')
+
+    def get_projects(self):
+        return next(walk(self.build_path))[1]
 
     def update_project_path(self, project_name):
         self.project_path = path.join(self.build_path, project_name)

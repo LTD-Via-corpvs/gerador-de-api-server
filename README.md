@@ -23,6 +23,15 @@ CORPO E RETORNO (201) `(application/json)`:
 }
 ```
 
+### GET PROJECTS
+- Com isso você pega todos os projetos já gerados.
+
+GET `{localhost}/projects`</br>
+RETORNO (200) `(application/json)`:
+```json
+string[]
+```
+
 ### GENERATE ROUTE AND MODEL
 - Com o projeto já criado, agora é possível gerar uma rota e modelo.
 - Haverá um erro 500 (Erro interno) se já existe uma rota com mesmo nome ou se o projeto não existir.
