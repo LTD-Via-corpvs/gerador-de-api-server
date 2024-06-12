@@ -90,7 +90,7 @@ class ProjectManager:
         with open(indexPath, 'a') as f:
             f.write(f"\nexport * from './_{fileName}.js'")
 
-    def insertRouteIntoIndex(self, routeName, modelName):
+    def insertRouteIntoIndex(self, modelName, routeName):
         new_code = f"app.use('/{routeName}', {modelName}Routes);\n"
         indexPath = path.join(self.project_path, "src", "index.js")
         with open(indexPath, "r+") as f:
