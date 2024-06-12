@@ -6,6 +6,8 @@ class ProjectManager:
         self.build_path = path.join(script_folder, '..', '..', 'build')
 
     def get_projects(self):
+        if not path.exists(self.build_path):
+            return []
         return next(walk(self.build_path))[1]
 
     def update_project_path(self, project_name):
