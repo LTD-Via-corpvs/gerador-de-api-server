@@ -71,6 +71,7 @@ def init_project():
         template_manager.update_project_path(project_name)
         template_manager.create_src()
         template_manager.create_index()
+        template_manager.create_uran_config(_package_manager)
     except Exception as err:
         return { 'error': err.args[0] }, 500
 
@@ -113,7 +114,7 @@ def get_models():
     try:
         project_manager.update_project_path(project_name)
         modelFiles, models = project_manager.getModels()
-        model_routes = [project_manager.getSpecificLine(f"/{project_manager.getModelName(model).lower()}")[1] for model in modelFiles]
+        model_routes = [project_manager.getSpecificLine(project_manager.getRouteFromModel(model))[1] for model in models]
         len_models = len(models)
         if len_models != len(modelFiles) or len_models != len(model_routes):
             raise Exception("Há algum problema na sincronia entre os arquivos.")

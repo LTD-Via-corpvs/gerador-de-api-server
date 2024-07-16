@@ -1,9 +1,9 @@
 {
   "name": "gerador-de-api-server",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "",
   "scripts": {
-    "dev": "flask --app src/main run"
+    "dev": "flask --app src/main run --debug"
   },
   "keywords": [],
   "author": "Aaron e Mateus",

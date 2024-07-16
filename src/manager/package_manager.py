@@ -8,7 +8,6 @@ class PackageManager:
         self.available_package_managers = []
         self.script_folder = script_folder
         self.build_path = path.join(script_folder, '..', '..', 'build')
-        print(script_folder)
         self.__check()
 
     def reload(self) -> list[str]:
@@ -78,9 +77,7 @@ class PackageManager:
             self.available_package_managers.clear()
         for package_manager in self.package_managers:
             try:
-                print(f"Checking: {package_manager}")
                 result = subprocess.run([package_manager, '-v'], capture_output=True, text=True, check=True)
-                print(f"{package_manager} version: {result.stdout.strip()}")
                 self.available_package_managers.append(package_manager)
             except subprocess.CalledProcessError as e:
                 print(f"Error running {package_manager}: {e}")

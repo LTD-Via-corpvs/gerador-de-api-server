@@ -1,5 +1,7 @@
-from os import path, listdir, walk
 import re
+import json
+
+from os import path, listdir, walk
 
 class ProjectManager:
     def __init__(self, script_folder) -> None:
@@ -104,6 +106,14 @@ class ProjectManager:
                     f.writelines(lines)
                     break
 
+        data = self.readUranConfig()
+        routes: dict = data["routes"]
+        routes[modelName] = f"/{routeName}"
+        data["routes"] = routes
+        self.writeUranConfig(data)
+        
+
+
     def insertImportIntoIndex(self, modelName):
         palavra_adicionar = f'{modelName}Routes'
         indexPath = path.join(self.project_path, "src", "index.js")
@@ -144,6 +154,7 @@ class ProjectManager:
         arr = []
         for f in files:
             split = f.split('_')[1].split('.')[0]
+            print(split)
             split = split[0].capitalize() + split[1:]
             arr.append(split)
 
@@ -179,7 +190,7 @@ class ProjectManager:
         with open(filePath, 'r', encoding='UTF-8') as arquivo:
             linhas = arquivo.readlines()
 
-        line = self.getSpecificLine(oldRoute)
+        line = self.getSpecificLine(oldRoute)[0]
     
         if line == -1:
             return Exception(f"A rota {oldRoute} não foi encontrada no arquivo!")
@@ -198,23 +209,37 @@ class ProjectManager:
         with open(filePath, 'w', encoding='UTF-8') as arquivo:
             arquivo.writelines(linhas)
 
+        data = self.readUranConfig()
+        routes: dict = data["routes"]
+        modelName = None
+        for k, v in routes.items():
+            if v == oldRoute:
+                modelName = k
+                break
+        routes[modelName] = routeName
+        data["routes"] = routes
+        self.writeUranConfig(data)
+
     def getSpecificLine(self, string):
         # raise Exception(string)
         with open(path.join(self.project_path, "src", "index.js"), 'r', encoding='UTF-8') as file:
             lines = file.readlines()
             for i, line in enumerate(lines):
-                # if i == 0:
-                #     continue
                 if string in line:
                     return i, line.strip()
         return -1, None
     
-    # def getAllRoutes(self, routeName):
-    #     filePath = path.join(self.project_path, "src", "index.js")
-    #     with open(filePath, 'r', encoding='UTF-8') as file:
-    #         lines = file.readlines()
-    #         line_content = []
-    #         for i, line in enumerate(lines):
-    #             if routeName in line:
-    #                 line_content.append(line.strip())
-    #     return line_content[1]
+    def getRouteFromModel(self, modelName):
+        data = self.readUranConfig()
+        routes: dict = data["routes"]
+        return routes[modelName]
+    
+    def readUranConfig(self):
+        data = {}
+        with open(path.join(self.project_path, 'uran-config.json'), 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return data
+    
+    def writeUranConfig(self, data):
+        with open(path.join(self.project_path, 'uran-config.json'), 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)

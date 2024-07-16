@@ -1,13 +1,27 @@
-from os import path, listdir, mkdir
 import pathlib
+import json
+
+from os import path, listdir, mkdir
 from shutil import copy2, copytree
 
 class TemplateManager:
     def __init__(self, script_folder) -> None:
         self.build_path = path.join(script_folder, '..', '..', 'build')
+        self.project_name = None
 
     def update_project_path(self, project_name):
         self.project_path = path.join(self.build_path, project_name)
+        self.project_name = project_name
+
+    def create_uran_config(self, package_manager: str):
+        content = {
+            "name": self.project_name,
+            "package_manager": package_manager,
+            "routes": { }
+        }
+
+        with open(path.join(self.project_path, 'uran-config.json'), 'w', encoding='utf-8') as f:
+            json.dump(content, f, ensure_ascii=False, indent=4)
     
     def create_index(self):
         content = (
