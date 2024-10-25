@@ -1,8 +1,7 @@
-use std::process::Command;
-
+use async_process::Command;
 use serde::Serialize;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Package {
     id: u8,
     name: String,
@@ -20,10 +19,10 @@ impl Package {
         &self.name
     }
 
-    pub fn is_installed(&self) -> bool {
+    pub async fn is_installed(&self) -> bool {
         Command::new(self.get_name())
             .arg("--version")
-            .output()
+            .output().await
             .map(|output| output.status.success())
             .unwrap_or(false)
     }

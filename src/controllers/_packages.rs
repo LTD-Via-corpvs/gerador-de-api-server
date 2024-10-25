@@ -1,3 +1,6 @@
+use std::sync::{mpsc::{self, Receiver}, Arc, Mutex};
+
+use actix_rt::Arbiter;
 use actix_web::Responder;
 use serde::Serialize;
 
@@ -31,11 +34,23 @@ impl PackagesController {
     pub async fn index() -> impl Responder {
         let package_managers = [Packages::BUN, Packages::PNPM, Packages::YARN, Packages::NPM];
         let mut installed_packages = vec![];
+        let (tx, rx) = mpsc::channel::<Package>();
+
+        let arbiter = Arbiter::new();
         for package_manager in package_managers.iter() {
             let pkg = package_manager.get();
-            if pkg.is_installed() {
-                installed_packages.push(pkg);
-            }
+            let tx = tx.clone();
+            arbiter.spawn(async move {
+                if pkg.is_installed().await {
+                    tx.send(pkg).unwrap();
+                }
+            });
+        }
+        
+        drop(tx); // <- Se não dropar, vai ficar no while infinito
+        
+        while let Some(v) = rx.recv().ok() {
+            installed_packages.push(v);
         }
         response(PackagesResponse::new(installed_packages))
     }
