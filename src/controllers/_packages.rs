@@ -1,4 +1,4 @@
-use std::sync::{mpsc::{self, Receiver}, Arc, Mutex};
+use std::sync::mpsc::{self};
 
 use actix_rt::Arbiter;
 use actix_web::Responder;

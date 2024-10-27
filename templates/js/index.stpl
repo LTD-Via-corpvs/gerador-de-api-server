@@ -1,0 +1,27 @@
+"import express from "express"
+import cookieParser from "cookie-parser"
+import cors from "cors"
+const PORT = 3333;
+
+import { credentials } from "./middleware/index.js"
+import { corsOptions } from "./configs/index.js"
+
+//Initializing express
+const app = express();
+
+//Credentials check before CORS!
+app.use(credentials);
+
+//Solve CORS
+app.use(cors(corsOptions));
+
+//Config JSON response
+app.use(express.json());
+
+//Middleware for cookies
+app.use(cookieParser());
+
+//Routes
+app.listen(PORT, () => {
+  console.log(`Server Running on PORT: ${PORT}!`);
+})
