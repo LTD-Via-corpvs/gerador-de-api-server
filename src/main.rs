@@ -3,11 +3,12 @@ use actix_web::{web, App, HttpServer};
 mod controllers;
 mod routes;
 mod services;
+mod helpers;
 
 use routes::register as api_route;
 
 #[actix_rt::main]
-async fn main() -> std::io::Result<()> {
+async fn main() -> std::io::Result<()> {    
     let mut server = HttpServer::new(|| {
         App::new()
             .app_data(web::JsonConfig::default().limit(4096))

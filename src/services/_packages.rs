@@ -4,7 +4,7 @@ use actix_rt::Arbiter;
 use async_process::Command;
 use sailfish::TemplateSimple;
 use serde::Serialize;
-use template::Template;
+use template::*;
 
 mod template {
     use sailfish::TemplateSimple;
@@ -68,6 +68,70 @@ mod template {
             "base.js".to_string()
         }
     }
+    
+    #[derive(TemplateSimple, Clone)]
+    #[template(path = "js/configs/_allowedOrigins.stpl")]
+    pub struct AllowedConfigTemplate;
+    impl Template for AllowedConfigTemplate {
+        fn filename(&self) -> String {
+            "_allowedOrigins.js".to_string()
+        }
+    }
+
+    #[derive(TemplateSimple, Clone)]
+    #[template(path = "js/configs/_corsOptions.stpl")]
+    pub struct CorsConfigTemplate;
+    impl Template for CorsConfigTemplate {
+        fn filename(&self) -> String {
+            "_corsOptions.js".to_string()
+        }
+    }
+    
+    #[derive(TemplateSimple, Clone)]
+    #[template(path = "js/configs/index.stpl")]
+    pub struct IndexConfigTemplate;
+    impl Template for IndexConfigTemplate {
+        fn filename(&self) -> String {
+            "index.js".to_string()
+        }
+    }
+    
+    #[derive(TemplateSimple, Clone)]
+    #[template(path = "js/database/_prisma.stpl")]
+    pub struct PrismaDatabaseTemplate;
+    impl Template for PrismaDatabaseTemplate {
+        fn filename(&self) -> String {
+            "_prisma.js".to_string()
+        }
+    }
+    
+    #[derive(TemplateSimple, Clone)]
+    #[template(path = "js/database/index.stpl")]
+    pub struct IndexDatabaseTemplate;
+    impl Template for IndexDatabaseTemplate {
+        fn filename(&self) -> String {
+            "index.js".to_string()
+        }
+    }
+    
+    #[derive(TemplateSimple, Clone)]
+    #[template(path = "js/middleware/_credentials.stpl")]
+    pub struct CredentialsMiddlewareTemplate;
+    impl Template for CredentialsMiddlewareTemplate {
+        fn filename(&self) -> String {
+            "_credentials.js".to_string()
+        }
+    }
+    
+    #[derive(TemplateSimple, Clone)]
+    #[template(path = "js/middleware/index.stpl")]
+    pub struct IndexMiddlewareTemplate;
+    impl Template for IndexMiddlewareTemplate {
+        fn filename(&self) -> String {
+            "index.js".to_string()
+        }
+    }
+
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -99,7 +163,7 @@ impl Package {
             .unwrap_or(false)
     }
 
-    async fn create_file<T: TemplateSimple + Template + Clone + Send + 'static>(&self, ctx: T, dir: PathBuf) {
+    fn create_file<T: TemplateSimple + Template + Clone + Send + 'static>(&self, ctx: T, dir: PathBuf) {
         let arbiter = Arbiter::new();
         arbiter.spawn(async move {
             let dir = dir.clone();
@@ -111,6 +175,27 @@ impl Package {
             let render = ctx.render_once().unwrap();
             file.write_all(render.as_bytes()).unwrap();
         });
+    }
+    
+    fn create_architecture(&self, src: PathBuf) {
+        let controller = src.join("controller");
+        let models = src.join("models");
+        let database = src.join("database");
+        let middleware = src.join("middleware");
+        let configs = src.join("configs");
+        
+        self.create_file(IndexTemplate, src.clone());
+        self.create_file(IndexControllersTemplate, controller.clone());
+        self.create_file(IndexModelsTemplate, models.clone());
+        self.create_file(IndexDatabaseTemplate, database.clone());
+        self.create_file(IndexMiddlewareTemplate, middleware.clone());
+        self.create_file(IndexConfigTemplate, configs.clone());
+        self.create_file(BaseControllerTemplate, controller.clone());
+        self.create_file(BaseModelsTemplate, models.clone());
+        self.create_file(PrismaDatabaseTemplate, database.clone());
+        self.create_file(CredentialsMiddlewareTemplate, middleware.clone());
+        self.create_file(AllowedConfigTemplate, configs.clone());
+        self.create_file(CorsConfigTemplate, configs.clone());
     }
 
     pub async fn init(&self, dir: &Path) -> bool {
@@ -163,32 +248,27 @@ impl Package {
         });
         
         let ctx = template::EnvTemplate { name: "token".to_string() };
-        self.create_file(ctx, dir.to_path_buf().clone()).await;
+        self.create_file(ctx, dir.to_path_buf().clone());
 
-        let ctx = template::IndexTemplate;
-        self.create_file(ctx, dir.to_path_buf().join("src").clone()).await;
+        let src = dir.to_path_buf().join("src");
+        self.create_architecture(src.clone());
 
-        let ctx = template::IndexControllersTemplate;
-        self.create_file(ctx, dir.to_path_buf().join("src").join("controller").clone()).await;
+        let mut file = File::create(dir.join("uran.toml")).unwrap();
 
-        let ctx = template::IndexModelsTemplate;
-        self.create_file(ctx, dir.to_path_buf().join("src").join("models").clone()).await;
+        let data = format!(r#"[config]
+project = "{}"
+description = ""
+author = ""
+package = "{}"
+language = "js"
+framework = "express"
+version = "1.0.0"
 
-        let ctx = template::BaseControllerTemplate;
-        self.create_file(ctx, dir.to_path_buf().join("src").join("controller").clone()).await;
-
-        let ctx = template::BaseModelsTemplate;
-        self.create_file(ctx, dir.to_path_buf().join("src").join("models").clone()).await;
-
-        let mut file = File::create(dir.join("api_config.json")).unwrap();
-
-        let data = r#"{{
-  "name": "{}",
-  "type": "module",
-}}"#;
+[logs]
+"#, dir.file_name().unwrap().to_str().unwrap(), self.get_name());
         file.write_all(data.as_bytes()).unwrap();
 
-        let dir_routes = dir.join("src").join("routes");
+        let dir_routes = src.join("routes");
         if !dir_routes.exists() {
             std::fs::create_dir_all(&dir_routes).unwrap();
         }
