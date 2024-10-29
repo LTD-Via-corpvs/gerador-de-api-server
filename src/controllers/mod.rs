@@ -22,8 +22,7 @@ mod response {
 }
 
 pub mod handlers {
-    use actix_web::http::StatusCode;
-    use actix_web::{Error, HttpResponse};
+    use actix_web::{http::StatusCode, Error, HttpResponse};
     use serde::Serialize;
 
     use super::response::Response;
@@ -51,6 +50,13 @@ pub mod handlers {
         super::response::response_with_status(
             ErrorResponse::new("content not found"),
             StatusCode::NOT_FOUND,
+        )
+    }
+    
+    pub fn bad_request(message: &str) -> Result<HttpResponse, Error> {
+        super::response::response_with_status(
+            ErrorResponse::new(message),
+            StatusCode::BAD_REQUEST,
         )
     }
 }

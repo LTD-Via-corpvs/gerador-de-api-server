@@ -1,1 +1,1 @@
-export * from './_credentials.js'
+export * from '~/middleware/_credentials.js'

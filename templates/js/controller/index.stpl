@@ -1,1 +1,1 @@
-export * from './base.js'
+export * from '~/controller/base.js'

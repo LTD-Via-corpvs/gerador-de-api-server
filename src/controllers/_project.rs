@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::services::_packages::Packages;
 
-use super::response::{response, Response};
+use super::{handlers::bad_request, response::{response, Response}};
 
 pub struct ProjectController;
 
@@ -35,9 +35,14 @@ impl Response for ProjectResponse {
 
 impl ProjectController {
     pub async fn post(body: Json<ProjectRequest>) -> impl Responder {
-        let body = body.into_inner();
+        let mut body = body.into_inner();
+        
+        body.project_name = body.project_name.to_lowercase().replace(" ", "-");
 
         let project_path = Path::new("../build").join(&body.project_name);
+        if project_path.is_dir() {
+            return bad_request("Já existe um projeto com esse nome")
+        }
         create_dir_all(&project_path).unwrap();
 
         let package = Packages::find_by_id(body.package_id).get();

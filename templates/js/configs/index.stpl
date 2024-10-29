@@ -1,2 +1,2 @@
-export * from './_allowedOrigins.js'
-export * from './_corsOptions.js'
+export * from '~/configs/_allowedOrigins.js'
+export * from '~/configs/_corsOptions.js'

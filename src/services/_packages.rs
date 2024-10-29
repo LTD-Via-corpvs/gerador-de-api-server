@@ -131,6 +131,15 @@ mod template {
             "index.js".to_string()
         }
     }
+    
+    #[derive(TemplateSimple, Clone)]
+    #[template(path = "js/routes/index.stpl")]
+    pub struct IndexRoutesTemplate;
+    impl Template for IndexRoutesTemplate {
+        fn filename(&self) -> String {
+            "index.js".to_string()
+        }
+    }
 
 }
 
@@ -183,6 +192,7 @@ impl Package {
         let database = src.join("database");
         let middleware = src.join("middleware");
         let configs = src.join("configs");
+        let routes = src.join("routes");
         
         self.create_file(IndexTemplate, src.clone());
         self.create_file(IndexControllersTemplate, controller.clone());
@@ -196,6 +206,7 @@ impl Package {
         self.create_file(CredentialsMiddlewareTemplate, middleware.clone());
         self.create_file(AllowedConfigTemplate, configs.clone());
         self.create_file(CorsConfigTemplate, configs.clone());
+        self.create_file(IndexRoutesTemplate, routes.clone());
     }
 
     pub async fn init(&self, dir: &Path) -> bool {
@@ -204,12 +215,11 @@ impl Package {
         let data = format!(
             r#"{{
   "name": "{}",
-  "type": "module",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {{
-      "dev": "nodemon src/index.js"
+      "dev": "nodemon --exec babel-node ."
   }},
   "keywords": [],
   "author": "",
@@ -226,6 +236,12 @@ impl Package {
     "zod": "^3.23.8"
   }},
   "devDependencies": {{
+    "babel-plugin-module-resolver": "^5.0.2",
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.22.11",
+    "@babel/node": "^7.22.10",
+    "@babel/plugin-transform-object-rest-spread": "^7.24.7",
+    "@babel/preset-env": "^7.22.10",
     "nodemon": "^2.0.15",
     "prisma": "^5.21.1"
   }}
@@ -264,15 +280,34 @@ language = "js"
 framework = "express"
 version = "1.0.0"
 
-[logs]
+[lines]
+route = "5"
+
 "#, dir.file_name().unwrap().to_str().unwrap(), self.get_name());
         file.write_all(data.as_bytes()).unwrap();
-
-        let dir_routes = src.join("routes");
-        if !dir_routes.exists() {
-            std::fs::create_dir_all(&dir_routes).unwrap();
-        }
-        File::create(dir_routes.join("index.js")).unwrap();
+        
+        let mut file = File::create(dir.join(".babelrc")).unwrap();
+        let data = format!(r#"{{
+"presets": ["@babel/preset-env"],
+"plugins": [
+    "@babel/plugin-transform-object-rest-spread",
+    [ "module-resolver", {{ "alias" : {{ "~": "./src"}} }} ] 
+  ]
+}}
+"#);
+        file.write_all(data.as_bytes()).unwrap();
+        
+        let mut file = File::create(dir.join("jsconfig.json ")).unwrap();
+        let data = format!(r#"{{
+  "compilerOptions": {{
+    "baseUrl": ".",
+    "paths": {{
+      "~/*": [ "./src/*" ],
+    }}
+  }}
+}}
+"#);
+        file.write_all(data.as_bytes()).unwrap();
 
         return false;
     }

@@ -15,6 +15,6 @@ async fn main() -> std::io::Result<()> {
             .service(web::scope("/api/v1").configure(api_route))
             .default_service(web::route().to(crate::controllers::handlers::page_not_found))
     });
-    server = server.bind("127.0.0.1:3333")?;
+    server = server.bind("127.0.0.1:3000")?;
     server.run().await
 }
