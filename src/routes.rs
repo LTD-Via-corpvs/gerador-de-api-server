@@ -5,4 +5,5 @@ use crate::controllers::{_packages::PackagesController, _project::ProjectControl
 pub fn register(config: &mut ServiceConfig) {
     config.service(resource("/packages").route(get().to(PackagesController::index)));
     config.service(resource("/project").route(post().to(ProjectController::post)));
+    config.service(resource("/project/{project_name}").route(post().to(ProjectController::post_route_model)));
 }

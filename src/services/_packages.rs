@@ -52,7 +52,7 @@ mod template {
     }
 
     #[derive(TemplateSimple, Clone)]
-    #[template(path = "js/controller/index.stpl")]
+    #[template(path = "js/controllers/index.stpl")]
     pub struct IndexControllersTemplate;
     impl Template for IndexControllersTemplate {
         fn filename(&self) -> String {
@@ -61,7 +61,7 @@ mod template {
     }
 
     #[derive(TemplateSimple, Clone)]
-    #[template(path = "js/controller/base.stpl")]
+    #[template(path = "js/controllers/base.stpl")]
     pub struct BaseControllerTemplate;
     impl Template for BaseControllerTemplate {
         fn filename(&self) -> String {
@@ -187,7 +187,7 @@ impl Package {
     }
     
     fn create_architecture(&self, src: PathBuf) {
-        let controller = src.join("controller");
+        let controller = src.join("controllers");
         let models = src.join("models");
         let database = src.join("database");
         let middleware = src.join("middleware");
@@ -321,14 +321,14 @@ pub enum Packages {
 }
 
 impl Packages {
-    pub fn find_by_name(name: &str) -> Self {
-        match name {
-            "bun" => Self::BUN,
-            "pnpm" => Self::PNPM,
-            "yarn" => Self::YARN,
-            _ => Self::NPM,
-        }
-    }
+    // pub fn find_by_name(name: &str) -> Self {
+    //     match name {
+    //         "bun" => Self::BUN,
+    //         "pnpm" => Self::PNPM,
+    //         "yarn" => Self::YARN,
+    //         _ => Self::NPM,
+    //     }
+    // }
 
     pub fn find_by_id(id: u8) -> Self {
         match id {
@@ -351,13 +351,5 @@ impl Packages {
 
     pub fn get(&self) -> Package {
         self.default()
-    }
-
-    pub fn get_name(&self) -> String {
-        self.get().name
-    }
-
-    pub fn get_id(&self) -> u8 {
-        self.get().id
     }
 }
