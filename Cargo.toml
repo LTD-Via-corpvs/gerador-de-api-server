@@ -1,6 +1,6 @@
 [package]
 name = "gerador-de-api-server"
-version = "0.1.0"
+version = "1.0.32"
 edition = "2021"
 
 [dependencies]
@@ -14,3 +14,5 @@ toml = "0.8.19"
 tracing = "0.1.40"
 tracing-actix-web = "0.7.15"
 env_logger = "0.11.5"
+async-fs = "2.1.2"
+futures-lite = "2.6.0"

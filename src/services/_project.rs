@@ -1,4 +1,5 @@
-use std::{fs, io::Write};
+use std::fs;
+use futures_lite::io::AsyncWriteExt;
 
 use serde::{Deserialize, Serialize};
 
@@ -34,7 +35,7 @@ impl Project {
         Self { data }
     }
     
-    pub fn generate_model(&self, model_name: &str, file_name: &str, junction_table: &str) -> std::io::Result<()> {
+    pub async fn generate_model(&self, model_name: &str, file_name: &str, junction_table: &str) -> std::io::Result<()> {
         let model_code = format!(
             "import {{ BaseModel }} from './index.js';\n\n\
             const {0}Model = () => {{\n\
@@ -62,18 +63,18 @@ impl Project {
             .join("models")
             .join("index.js");
 
-        fs::write(&file_path, model_code)?;
+        async_fs::write(&file_path, model_code).await?;
 
         let export_line = format!("\nexport * from './_{}.js'", file_name);
-        fs::OpenOptions::new()
+        let mut file = async_fs::OpenOptions::new()
             .append(true)
-            .open(index_path)?
-            .write_all(export_line.as_bytes())?;
+            .open(index_path).await?;
+        file.write_all(export_line.as_bytes()).await?;
 
         Ok(())
     }
-    
-    pub fn generate_controller(&self, model_name: &str, file_name: &str) -> std::io::Result<()> {
+
+    pub async fn generate_controller(&self, model_name: &str, file_name: &str) -> std::io::Result<()> {
         let controller_code = format!(
             "import {{ {0}Model }} from '../models/index.js'\n\
             import {{ BaseController }} from './index.js'\n\
@@ -111,18 +112,18 @@ impl Project {
             .join("controllers")
             .join("index.js");
 
-        fs::write(&file_path, controller_code)?;
+        async_fs::write(&file_path, controller_code).await?;
 
         let export_line = format!("\nexport * from './_{}.js'", file_name);
-        fs::OpenOptions::new()
+        let mut file = async_fs::OpenOptions::new()
             .append(true)
-            .open(index_path)?
-            .write_all(export_line.as_bytes())?;
+            .open(index_path).await?;
+        file.write_all(export_line.as_bytes()).await?;
 
         Ok(())
     }
-    
-    pub fn generate_route(&self, model_name: &str, file_name: &str, route_name: &str) -> std::io::Result<()> {
+
+    pub async fn generate_route(&self, model_name: &str, file_name: &str, route_name: &str) -> std::io::Result<()> {
         let router_code = format!(
             "import {{ {0}Controller }} from '../controllers/index.js'\n\
             import {{ Router }} from 'express'\n\
@@ -151,17 +152,17 @@ impl Project {
             .join("routes")
             .join("index.js");
 
-        fs::write(&file_path, router_code)?;
+        async_fs::write(&file_path, router_code).await?;
 
         // Add import line to the routes index.js file at the beginning
         let import_line = format!("import {{ {0}Routes }} from './_{1}.js';\n", model_name, file_name);
-        let current_content = fs::read_to_string(&index_path)?;
+        let current_content = async_fs::read_to_string(&index_path).await?;
         let new_content = format!("{}{}", import_line, current_content);
-        fs::write(index_path, new_content)?;
+        async_fs::write(index_path, new_content).await?;
 
         // Update the main routes file to use the new routes
         let main_routes_path = project_path.join("src").join("routes").join("index.js");
-        let route_content = fs::read_to_string(&main_routes_path)?;
+        let route_content = async_fs::read_to_string(&main_routes_path).await?;
         let route_lines: Vec<&str> = route_content.lines().collect();
 
         let route_line_number: usize = self.data.lines.route.parse().unwrap_or(5);
@@ -180,11 +181,11 @@ impl Project {
             }
         }
 
-        fs::write(main_routes_path, updated_content)?;
+        async_fs::write(main_routes_path, updated_content).await?;
 
         Ok(())
     }
-    
+
     fn get_path(&self) -> std::path::PathBuf {
         let project_name = &self.data.config.project;
         let build = std::path::Path::new("../build");

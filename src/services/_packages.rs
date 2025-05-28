@@ -297,7 +297,7 @@ route = "5"
 "#);
         file.write_all(data.as_bytes()).unwrap();
         
-        let mut file = File::create(dir.join("jsconfig.json ")).unwrap();
+        let mut file = File::create(dir.join("jsconfig.json")).unwrap();
         let data = format!(r#"{{
   "compilerOptions": {{
     "baseUrl": ".",
@@ -305,6 +305,13 @@ route = "5"
       "~/*": [ "./src/*" ],
     }}
   }}
+}}
+"#);
+        file.write_all(data.as_bytes()).unwrap();
+        
+        let mut file = File::create(dir.join("uran_mapping.json")).unwrap();
+        let data = format!(r#"{{
+  "routes": []
 }}
 "#);
         file.write_all(data.as_bytes()).unwrap();
