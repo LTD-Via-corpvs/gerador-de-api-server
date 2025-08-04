@@ -5,7 +5,7 @@ use futures_lite::AsyncReadExt;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct RouteMapping {
+pub struct FeatureMapping {
     pub(crate) route: String,
     pub(crate) model: String,
     pub(crate) controller: String,
@@ -14,7 +14,7 @@ pub struct RouteMapping {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Mapping {
-    routes: Vec<RouteMapping>,
+    features: Vec<FeatureMapping>,
 }
 
 pub struct UranMapping {
@@ -34,24 +34,23 @@ impl UranMapping {
     }
 
     pub fn has_route(&self, route: &str) -> bool {
-        self.mapping.routes.iter().any(|r| r.route == route)
+        self.mapping.features.iter().any(|r| r.route == route)
     }
     pub fn has_controller(&self, controller: &str) -> bool {
-        self.mapping.routes.iter().any(|r| r.controller == controller)
+        self.mapping.features.iter().any(|r| r.controller == controller)
     }
     pub fn has_model(&self, model: &str) -> bool {
-        self.mapping.routes.iter().any(|r| r.model == model)
+        self.mapping.features.iter().any(|r| r.model == model)
     }
     pub fn has_file(&self, file: &str) -> bool {
-        self.mapping.routes.iter().any(|r| r.file == file)
+        self.mapping.features.iter().any(|r| r.file == file)
     }
 
-    pub async fn add_route(&mut self, route: RouteMapping) {
-        self.mapping.routes.push(route);
-        self.save_routes().await.unwrap();
+    pub async fn add_feature(&mut self, feature: FeatureMapping) {
+        self.mapping.features.push(feature);
     }
 
-    async fn save_routes(&self) -> Result<(), Box<dyn std::error::Error>> {
+    async fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let data = serde_json::to_string_pretty(&self.mapping)?;
         async_fs::write(&self.path, data).await?;
         Ok(())

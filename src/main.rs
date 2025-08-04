@@ -8,17 +8,38 @@ mod services;
 
 use routes::register as api_route;
 use tracing_actix_web::TracingLogger;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        controllers::_packages::get_packages,
+        controllers::_project::create_project,
+        controllers::_project::create_route_model,
+    ),
+    tags(
+        (name = "packages", description = "Gerenciamento de pacotes"),
+        (name = "project", description = "Operações de projeto")
+    )
+)]
+struct ApiDoc;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "debug");
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-    
+
     let mut server = HttpServer::new(|| {
         App::new()
             .wrap(TracingLogger::default())
             .app_data(web::JsonConfig::default().limit(4096))
+            
             .service(web::scope("/api/v1").configure(api_route))
+            .service(
+                            SwaggerUi::new("/swagger-ui/{_:.*}")
+                                .url("/api-docs/openapi.json", ApiDoc::openapi()),
+                        )
             .default_service(web::route().to(crate::controllers::handlers::page_not_found))
     });
     server = server.bind("127.0.0.1:3000")?;

@@ -117,7 +117,8 @@ impl Project {
         let export_line = format!("\nexport * from './_{}.js'", file_name);
         let mut file = async_fs::OpenOptions::new()
             .append(true)
-            .open(index_path).await?;
+            .open(index_path.clone()).await?;
+        println!("{:?}", index_path.as_os_str());
         file.write_all(export_line.as_bytes()).await?;
 
         Ok(())

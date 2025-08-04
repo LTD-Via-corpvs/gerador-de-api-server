@@ -5,6 +5,7 @@ use async_process::Command;
 use sailfish::TemplateSimple;
 use serde::Serialize;
 use template::*;
+use utoipa::ToSchema;
 
 mod template {
     use sailfish::TemplateSimple;
@@ -143,7 +144,7 @@ mod template {
 
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug, ToSchema)]
 pub struct Package {
     id: u8,
     name: String,
@@ -311,7 +312,10 @@ route = "5"
         
         let mut file = File::create(dir.join("uran_mapping.json")).unwrap();
         let data = format!(r#"{{
-  "routes": []
+  "features": [],
+  "routes": [],
+  "controllers": [],
+  "models": []
 }}
 "#);
         file.write_all(data.as_bytes()).unwrap();

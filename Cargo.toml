@@ -16,3 +16,6 @@ tracing-actix-web = "0.7.15"
 env_logger = "0.11.5"
 async-fs = "2.1.2"
 futures-lite = "2.6.0"
+utoipa = {version = "5", features = ["actix_extras"]}
+utoipa-swagger-ui = { version = "9", features = ["actix-web"] }
+utoipa-rapidoc = { version = "6.0.0", features = ["actix-web"] }
