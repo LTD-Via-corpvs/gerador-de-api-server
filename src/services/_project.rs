@@ -1,5 +1,4 @@
 use std::fs;
-use futures_lite::io::AsyncWriteExt;
 
 use serde::{Deserialize, Serialize};
 
@@ -51,6 +50,7 @@ impl Project {
             export {{ {0}Model }}\n",
             model_name, model_name.to_lowercase(), junction_table
         );
+        let export_line = format!("\nexport * from './_{}.js'", file_name);
 
         let project_path = &self.get_path();
         let file_path = project_path
@@ -65,11 +65,25 @@ impl Project {
 
         async_fs::write(&file_path, model_code).await?;
 
-        let export_line = format!("\nexport * from './_{}.js'", file_name);
-        let mut file = async_fs::OpenOptions::new()
-            .append(true)
-            .open(index_path).await?;
-        file.write_all(export_line.as_bytes()).await?;
+        let content = match async_fs::read_to_string(&index_path).await {
+            Ok(content) => content,
+            Err(_) => String::new() // If file doesn't exist, start with empty string
+        };
+
+        // Check if the export line already exists
+        if !content.contains(&export_line) {
+            // Create new content with the export line
+            let new_content = if content.ends_with('\n') {
+                format!("{}{}", content, export_line)
+            } else if content.is_empty() {
+                export_line
+            } else {
+                format!("{}{}", content, export_line)
+            };
+
+            // Write the entire content back to the file
+            async_fs::write(&index_path, new_content).await?;
+        }
 
         Ok(())
     }
@@ -100,6 +114,8 @@ impl Project {
             export {{ {0}Controller }}\n",
             model_name
         );
+        
+        let export_line = format!("\nexport * from './_{}.js'", file_name);
 
         let project_path = &self.get_path();
         let file_path = project_path
@@ -112,14 +128,29 @@ impl Project {
             .join("controllers")
             .join("index.js");
 
+        // Write the controller code to the file
         async_fs::write(&file_path, controller_code).await?;
 
-        let export_line = format!("\nexport * from './_{}.js'", file_name);
-        let mut file = async_fs::OpenOptions::new()
-            .append(true)
-            .open(index_path.clone()).await?;
-        println!("{:?}", index_path.as_os_str());
-        file.write_all(export_line.as_bytes()).await?;
+        // Read the index.js file completely
+        let content = match async_fs::read_to_string(&index_path).await {
+            Ok(content) => content,
+            Err(_) => String::new() // If file doesn't exist, start with empty string
+        };
+
+        // Check if the export line already exists
+        if !content.contains(&export_line) {
+            // Create new content with the export line
+            let new_content = if content.ends_with('\n') {
+                format!("{}{}", content, export_line)
+            } else if content.is_empty() {
+                export_line
+            } else {
+                format!("{}{}", content, export_line)
+            };
+
+            // Write the entire content back to the file
+            async_fs::write(&index_path, new_content).await?;
+        }
 
         Ok(())
     }

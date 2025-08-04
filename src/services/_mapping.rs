@@ -46,11 +46,11 @@ impl UranMapping {
         self.mapping.features.iter().any(|r| r.file == file)
     }
 
-    pub async fn add_feature(&mut self, feature: FeatureMapping) {
+    pub fn add_feature(&mut self, feature: FeatureMapping) {
         self.mapping.features.push(feature);
     }
 
-    async fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let data = serde_json::to_string_pretty(&self.mapping)?;
         async_fs::write(&self.path, data).await?;
         Ok(())

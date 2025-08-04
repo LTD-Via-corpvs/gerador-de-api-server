@@ -1,6 +1,5 @@
 use std::{fs::create_dir_all, path::Path};
 
-use actix_rt::Arbiter;
 use actix_web::{
     web::{self, Json},
     HttpResponse, Responder,
@@ -112,7 +111,6 @@ pub async fn create_route_model(project_name: web::Path<String>, body: Json<Proj
     let file_lowercase = file.to_lowercase();
     let route_lowercase = route.to_lowercase();
     
-    let arbiter = Arbiter::new();
     let project = Project::read(project_path.join("uran.toml").to_str().unwrap());
     let project_data = serde_json::to_value(&project.data).unwrap_or_default();
     let mut uran_mapping = UranMapping::load_routes(project_path.join("uran_mapping.json")).await?;
@@ -132,22 +130,18 @@ pub async fn create_route_model(project_name: web::Path<String>, body: Json<Proj
         return bad_request("Já existe um arquivo com esse nome.")
     }
     
-    arbiter.spawn(async move {
-        if let Err(e) = project.generate_model(&model_capitalized, &file_lowercase, &junction_table.unwrap_or_else(|| "".to_string())).await {
-            eprintln!("Error generating model: {:?}", e);
-            return;
-        }
-        if let Err(e) = project.generate_controller(&model_capitalized, &file_lowercase).await {
-            eprintln!("Error generating controller: {:?}", e);
-            return;
-        }
-        if let Err(e) = project.generate_route(&model_capitalized, &file_lowercase, &route_lowercase).await {
-            eprintln!("Error generating route: {:?}", e);
-            return;
-        }
-        
-        uran_mapping.add_feature(FeatureMapping { route: route_lowercase, model: model_capitalized, controller: controller, file: file_lowercase }).await;
-    });
+    if let Err(e) = project.generate_model(&model_capitalized, &file_lowercase, &junction_table.unwrap_or_else(|| "".to_string())).await {
+        return Ok(HttpResponse::InternalServerError().json(json!({ "error": format!("Error generating model: {:?}", e) })));
+    }
+    if let Err(e) = project.generate_controller(&model_capitalized, &file_lowercase).await {
+        return Ok(HttpResponse::InternalServerError().json(json!({ "error": format!("Error generating controller: {:?}", e) })));
+    }
+    if let Err(e) = project.generate_route(&model_capitalized, &file_lowercase, &route_lowercase).await {
+        return Ok(HttpResponse::InternalServerError().json(json!({ "error": format!("Error generating route: {:?}", e) })));
+    }
+    
+    uran_mapping.add_feature(FeatureMapping { route: route_lowercase, model: model_capitalized, controller: controller, file: file_lowercase });
+    uran_mapping.save().await.unwrap();
     
 
     Ok(HttpResponse::Ok().json(json!({ "data": project_data })))
